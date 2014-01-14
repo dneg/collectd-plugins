@@ -17,8 +17,8 @@ sub my_read {
     my @tmp;
 
     unless (open(STATS, $file)) {
-        print STDERR "Running kernel is not exporting XFS statistics.\n";
-        die "$file: $!";
+        plugin_log(LOG_ERR, "Running kernel is not exporting XFS statistics.\n");
+        return 0;
     }
     while (<STATS>) {
         chomp;
@@ -50,7 +50,10 @@ sub my_read {
     splice(@values, 52, 0, ($tmp[1]));
     splice(@values, 54, 0, ($tmp[2]));
 
-    ($#values == 78) || die "Found $#values XFS values, expected 78";
+    unless ($#values == 78) {
+        plugin_log(LOG_ERR, "Found $#values XFS values, expected 78");
+        return 0;
+    }
 
     my $time = localtime(time);
 
