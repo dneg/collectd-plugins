@@ -117,25 +117,29 @@ sub my_read
   $vl->{'type'} = 'rabbitmq';
 
   foreach my $result (@{$ref}) {
+    next if $result->{'name'} =~ /^tail_shotgun_eventlog/;
     $vl->{'plugin_instance'} = $result->{'vhost'};
     $vl->{'type_instance'} = $result->{'name'};
     $vl->{'plugin_instance'} =~ s#[/-]#_#g;
     $vl->{'type_instance'} =~ s#[/-]#_#g;
     $vl->{'values'} = [ 
       $result->{'messages'} ? $result->{'messages'} : 0, 
-      $result->{'messages_details'}->{'rate'} ? $result->{'messages_details'}->{'rate'} : 0,
-      $result->{'messages_unacknowledged'} ? $result->{'messages_unacknowledged'} : 0, 
-      $result->{'messages_unacknowledged_details'}->{'rate'} ? $result->{'messages_unacknowledged_details'}->{'rate'} : 0,
-      $result->{'messages_ready'} ? $result->{'messages_ready'} : 0, 
-      $result->{'message_ready_details'}->{'rate'} ? $result->{'message_ready_details'}->{'rate'} : 0,
       $result->{'memory'} ? $result->{'memory'} : 0, 
       $result->{'consumers'} ? $result->{'consumers'} : 0, 
-      $result->{'message_stats'}->{'publish'} ? $result->{'message_stats'}->{'publish'} : 0,
       $result->{'message_stats'}->{'publish_details'}->{'rate'} ? $result->{'message_stats'}->{'publish_details'}->{'rate'} : 0,
-      $result->{'message_stats'}->{'deliver_no_ack'} ? $result->{'message_stats'}->{'deliver_no_ack'} : 0,
-      $result->{'message_stats'}->{'deliver_no_ack_details'}->{'rate'} ? $result->{'message_stats'}->{'deliver_no_ack_details'}->{'rate'} : 0,
-      $result->{'message_stats'}->{'deliver_get'} ? $result->{'message_stats'}->{'deliver_get'} : 0,
       $result->{'message_stats'}->{'deliver_get_details'}->{'rate'} ? $result->{'message_stats'}->{'deliver_get_details'}->{'rate'} : 0,
+      $result->{'message_stats'}->{'ack_details'}->{'rate'} ? $result->{'message_stats'}->{'ack_details'}->{'rate'} : 0,
+
+
+#      $result->{'messages_details'}->{'rate'} ? $result->{'messages_details'}->{'rate'} : 0,
+#      $result->{'messages_unacknowledged'} ? $result->{'messages_unacknowledged'} : 0, 
+#      $result->{'messages_unacknowledged_details'}->{'rate'} ? $result->{'messages_unacknowledged_details'}->{'rate'} : 0,
+#      $result->{'messages_ready'} ? $result->{'messages_ready'} : 0, 
+#      $result->{'message_ready_details'}->{'rate'} ? $result->{'message_ready_details'}->{'rate'} : 0,
+#      $result->{'message_stats'}->{'publish'} ? $result->{'message_stats'}->{'publish'} : 0,
+#      $result->{'message_stats'}->{'deliver_no_ack'} ? $result->{'message_stats'}->{'deliver_no_ack'} : 0,
+#      $result->{'message_stats'}->{'deliver_no_ack_details'}->{'rate'} ? $result->{'message_stats'}->{'deliver_no_ack_details'}->{'rate'} : 0,
+#      $result->{'message_stats'}->{'deliver_get'} ? $result->{'message_stats'}->{'deliver_get'} : 0,
     ];  
     plugin_log(LOG_ERR, "RabbitMQ: dispatching stats for " . $result->{'vhost'} . '/' . $result->{'name'});
     plugin_dispatch_values($vl);
