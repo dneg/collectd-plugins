@@ -24,7 +24,7 @@ This is a collectd plugin for monitoring message rates and queues on a RabbitMQ 
 In your collectd config:
 
     <LoadPlugin "perl">
-    	Globals true
+      Globals true
     </LoadPlugin>
 
     <Plugin "perl">
@@ -37,15 +37,18 @@ In your collectd config:
        Realm "RabbitMQ Management"
        Host "localhost"
        Port "55672"
+       Exclude "queues,to,ignore"
       </Plugin>
     </Plugin>
 
 The 'Realm' value is annoyingly dependant on the version of RabbitMQ you're running. It corresponds to the authentication realm that LWP::UserAgent will send credentials to (based on HTTP headers sent by the broker). For RabbitMQ 2.8.1, the value is "RabbitMQ Management", for 2.5.1 it's "Management: Web UI". If neither of these work, sniff the HTTP traffic to find the basic authentication realm.
 
+Excludes is an optional comma seperated list of queues to ignore. This will match any queue starting with the string defined here.
+
 =head1 AUTHOR
 
 Mark Steele, C<< <mark at control-alt-del.org> >>
-    
+
 =cut
 
 my $username = 'user';
@@ -53,6 +56,7 @@ my $password = 'pass';
 my $host = 'localhost';
 my $port = 55672;
 my $realm = '';
+my @exclude;
 
 plugin_register (TYPE_READ, 'RabbitMQ', 'my_read');
 plugin_register (TYPE_CONFIG, "RabbitMQ", "rabbit_config");
@@ -73,6 +77,8 @@ sub rabbit_config {
             $port = $val;
         } elsif ($key eq 'realm' ) {
             $realm = $val;
+        } elsif ($key eq 'exclude') {
+            @exclude = split(/,/, $val)
         }
     }
   plugin_log(LOG_ERR, "RabbitMQ: reading configuration done");
@@ -116,20 +122,23 @@ sub my_read
   $vl->{'plugin'} = 'rabbitmq';
   $vl->{'type'} = 'rabbitmq';
 
+  OUTER:
   foreach my $result (@{$ref}) {
-    next if $result->{'name'} =~ /^tail_shotgun_eventlog/;
+    foreach my $exc (@exclude) {
+      last OUTER if $result->{'name'} =~ /^$exc/;
+    }
     $vl->{'plugin_instance'} = $result->{'vhost'};
     $vl->{'type_instance'} = $result->{'name'};
     $vl->{'plugin_instance'} =~ s#[/-]#_#g;
     $vl->{'type_instance'} =~ s#[/-]#_#g;
-    $vl->{'values'} = [ 
-      $result->{'messages'} ? $result->{'messages'} : 0, 
-      $result->{'memory'} ? $result->{'memory'} : 0, 
-      $result->{'consumers'} ? $result->{'consumers'} : 0, 
+    $vl->{'values'} = [
+      $result->{'messages'} ? $result->{'messages'} : 0,
+      $result->{'memory'} ? $result->{'memory'} : 0,
+      $result->{'consumers'} ? $result->{'consumers'} : 0,
       $result->{'message_stats'}->{'publish_details'}->{'rate'} ? $result->{'message_stats'}->{'publish_details'}->{'rate'} : 0,
       $result->{'message_stats'}->{'deliver_get_details'}->{'rate'} ? $result->{'message_stats'}->{'deliver_get_details'}->{'rate'} : 0,
       $result->{'message_stats'}->{'ack_details'}->{'rate'} ? $result->{'message_stats'}->{'ack_details'}->{'rate'} : 0,
-    ];  
+    ];
     plugin_log(LOG_ERR, "RabbitMQ: dispatching stats for " . $result->{'vhost'} . '/' . $result->{'name'});
     plugin_dispatch_values($vl);
   }
