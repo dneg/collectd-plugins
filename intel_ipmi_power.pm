@@ -90,7 +90,7 @@ sub __get_ipmi_one_chassis {
     my $res = scalar run(command => $ipmi_cmd, verbose => 0, buffer => \$output, timeout => 10);
 
     if (!$res) {
-        plugin_log(LOG_ERR, "$plugin_name: ipmi-oem failed: $!: $res");
+        plugin_log(LOG_ERR, "$plugin_name: $chassis_name: ipmi-oem failed: $!: $res");
         #return 0;
     }
         
@@ -116,7 +116,7 @@ sub __get_ipmi_one_chassis {
 
     my $node_count = (int keys %$nodes);
     if ($node_count != $expected_nodes) {
-        plugin_log(LOG_ERR, "$plugin_name: got $node_count, wanted $expected_nodes nodes");
+        plugin_log(LOG_ERR, "$plugin_name: $chassis_name: got $node_count, wanted $expected_nodes nodes");
         return 1;
     }
 
