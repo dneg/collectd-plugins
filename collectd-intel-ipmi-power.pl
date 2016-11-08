@@ -23,7 +23,7 @@ log4perl.appender.Syslog.ident = collectd-intel-ipmi-power
 log4perl.appender.Syslog.logopt = pid
 log4perl.appender.Syslog.facility = daemon
 log4perl.appender.Syslog.layout = SimpleLayout
-log4perl.appender.Syslog.Threshold = WARN
+log4perl.appender.Syslog.Threshold = INFO
 EOT
 
 GetOptions($OPT,
@@ -40,6 +40,8 @@ LOGDIE "no chassis names specified" if (!$OPT->{chassis});
 # check if ipmi-oem is installed and bail out if it's missing
 my $ipmi_oem = can_run('ipmi-oem');
 LOGDIE "can't find ipmi-oem" if (!$ipmi_oem);
+
+INFO sprintf "starting for [%s]", (join " ", @{$OPT->{chassis}});
 
 # loop forever polling each chassis
 while (1) {
