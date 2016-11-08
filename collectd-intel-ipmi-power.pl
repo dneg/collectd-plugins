@@ -100,7 +100,7 @@ sub __get_ipmi_one_chassis {
 
     # send a value list to collectd. set the hostname to the current chassis we
     # are grabbing data for
-    my $output = sprintf 'PUTVAL "%s/intel_ipmi_power/power-current_power" interval=%s N:%d', $chassis_name, $interval, $current_power;
+    my $output = sprintf 'PUTVAL "%s/ipmi_intel_power/power-current_power" interval=%s N:%d', $chassis_name, $interval, $current_power;
 
     DEBUG $output;
     print "$output\n";
