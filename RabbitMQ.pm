@@ -125,7 +125,7 @@ sub my_read
   OUTER:
   foreach my $result (@{$ref}) {
     foreach my $exc (@exclude) {
-      last OUTER if $result->{'name'} =~ /^$exc/;
+      next OUTER if $result->{'name'} =~ /^$exc/;
     }
     $vl->{'plugin_instance'} = $result->{'vhost'};
     $vl->{'type_instance'} = $result->{'name'};
